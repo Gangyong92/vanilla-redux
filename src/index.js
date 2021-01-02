@@ -6,14 +6,17 @@ const number = document.querySelector("span");
 
 number.innerText = 0;
 
+const ADD = "ADD";
+const MINUS = "MINUS";
+
 const countModifier = (count = 0, action) => {
-  if (action.type === "ADD") {
-    return count + 1;
-  } else if (action.type === "MINUS") {
-    return count - 1;
-  } else {
-    // 초기화 루틴. ADD, MINUS가 없을 거니까.
-    return count;
+  switch (action.type) {
+    case ADD:
+      return count + 1;
+    case MINUS:
+      return count - 1;
+    default:
+      return count;
   }
 };
 const countStore = createStore(countModifier);
@@ -23,13 +26,16 @@ const countStore = createStore(countModifier);
 const onChange = () => {
   number.innerText = countStore.getState();
 };
+// subscribe는 state의 변화를 감지함. 변화시 동작할 함수를 args로 넣어줘야 함.
 countStore.subscribe(onChange);
 
+// dispatch로 reducer을 호출할 수 있음. object로 args를 넘겨야 함.
+// 그리고 action은 type이 꼭 있어야 함. type을 이름 바꾸면 안됨.
 const handleAdd = () => {
-  countStore.dispatch({ type: "ADD" });
+  countStore.dispatch({ type: ADD });
 };
 const handleMinus = () => {
-  countStore.dispatch({ type: "MINUS" });
+  countStore.dispatch({ type: MINUS });
 };
 
 add.addEventListener("click", handleAdd);
