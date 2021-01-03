@@ -1,42 +1,65 @@
 import { createStore } from "redux";
 
-const add = document.getElementById("add");
-const minus = document.getElementById("minus");
-const number = document.querySelector("span");
+const form = document.querySelector("form");
+const input = document.querySelector("input");
+const ul = document.querySelector("ul");
 
-number.innerText = 0;
+const ADD_TODO = "ADD_TODO";
+const DELETE_TODO = "DELETE_TODO";
 
-const ADD = "ADD";
-const MINUS = "MINUS";
+const addToDo = (text) => {
+  return { type: ADD_TODO, text, id: Date.now() };
+};
+const deleteToDo = (id) => {
+  return { type: DELETE_TODO, id };
+};
 
-const countModifier = (count = 0, action) => {
+const reducer = (state = [], action) => {
   switch (action.type) {
-    case ADD:
-      return count + 1;
-    case MINUS:
-      return count - 1;
+    case ADD_TODO:
+      const newToDoObj = action;
+      return [newToDoObj, ...state];
+    case DELETE_TODO:
+      const cleaned = state.filter((toDo) => toDo.id !== action.id);
+      return cleaned;
     default:
-      return count;
+      return state;
   }
 };
-const countStore = createStore(countModifier);
 
-// 초기화 될때는 subscribe에 연결 전이기 때문에 0은 출력 안될 거임. 그래서 위에
-// 0으로 초기화.
-const onChange = () => {
-  number.innerText = countStore.getState();
-};
-// subscribe는 state의 변화를 감지함. 변화시 동작할 함수를 args로 넣어줘야 함.
-countStore.subscribe(onChange);
+const store = createStore(reducer);
 
-// dispatch로 reducer을 호출할 수 있음. object로 args를 넘겨야 함.
-// 그리고 action은 type이 꼭 있어야 함. type을 이름 바꾸면 안됨.
-const handleAdd = () => {
-  countStore.dispatch({ type: ADD });
+const dispatchAddToDo = (text) => {
+  store.dispatch(addToDo(text));
 };
-const handleMinus = () => {
-  countStore.dispatch({ type: MINUS });
+const dispatchDeleteToDo = (e) => {
+  const id = parseInt(e.target.parentNode.id);
+  store.dispatch(deleteToDo(id));
 };
 
-add.addEventListener("click", handleAdd);
-minus.addEventListener("click", handleMinus);
+const paintToDos = () => {
+  const toDos = store.getState();
+  // 매번 todo 전체를 그리기 때문에 기존 것은 초기화 시켜줌.
+  ul.innerHTML = "";
+  toDos.forEach((toDo) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.innerText = "❌";
+    btn.addEventListener("click", dispatchDeleteToDo);
+    li.id = toDo.id;
+    li.innerText = toDo.text;
+    li.append(btn);
+    ul.appendChild(li);
+  });
+};
+
+store.subscribe(paintToDos);
+
+const onSubmit = (e) => {
+  e.preventDefault();
+  const toDo = input.value;
+  input.value = "";
+  dispatchAddToDo(toDo);
+};
+
+form.addEventListener("submit", onSubmit);
